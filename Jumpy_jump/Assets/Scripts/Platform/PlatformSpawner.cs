@@ -4,39 +4,53 @@ using UnityEngine;
 
 public class PlatformSpawner : MonoBehaviour
 {
+    private const int Min_Chance_Inst_Platform = 0;
+    private const int Max_Chance_Inst_Platform = 101; // random.range 101 = 100
+
     private int ProbabilityOccurrence;
-    private PlatformMov CurrentPlatform;
+    private ObstacleControler CurrentPlatform;
+    private float ComplexityLevel;
 
     private void Start()
     {
-        ProbabilityOccurrence = 99;
+        ProbabilityOccurrence = 100;
+        ComplexityLevel = 99;
     }
 
     private void OnTriggerExit2D(Collider2D collision)
     {
-        GameObject temp = collision.gameObject;
-        CurrentPlatform = temp.GetComponent<PlatformMov>();
-        int rand = GetRandomNumber();
-
-        if(CurrentPlatform == true && rand < ProbabilityOccurrence)
+        if(collision.GetComponent<ObstacleControler>() == false)
         {
+            return;
+        }
 
-            float posX = temp.GetComponent<SpriteRenderer>().bounds.max.x + temp.transform.localScale.x / 2;
-            Vector3 instPos = new Vector3(posX, transform.position.y, 0);
+        Vector3 instPos = new Vector3(
+            (collision.GetComponent<ObstacleControler>().GetLeftTopSpritePos().x + 1.5f), 
+            transform.position.y, transform.position.z);
+
+        CurrentPlatform = collision.GetComponent<ObstacleControler>();
+
+        int chanceInst = GetRandomNumber();
+
+        if(chanceInst <= ProbabilityOccurrence)
+        {
             CreatePlatform(instPos);
         }
-        else if(CurrentPlatform == true && rand >= ProbabilityOccurrence)
+        else
         {
-            float posX = temp.GetComponent<SpriteRenderer>().bounds.max.x + temp.transform.localScale.x / 2;
-            Vector3 instPos = new Vector3(posX, transform.position.y, 0);
             StartCoroutine(TryCreateAgain(instPos));
         }
-   
     }
 
     private void CreatePlatform(Vector3 pos)
     {
         ObjectPool.Instans.GetObgectOfTag(CurrentPlatform.GetTag(), pos, transform, Quaternion.identity);
+    }
+
+    private int GetRandomNumber()
+    {
+        int temp = Random.Range(0, 101);
+        return temp;
     }
 
     IEnumerator TryCreateAgain(Vector3 pos)
@@ -53,12 +67,5 @@ public class PlatformSpawner : MonoBehaviour
         }
 
     }
-
-    private int GetRandomNumber()
-    {
-        int temp = Random.Range(0, 101);
-        return temp;
-    }
-
 
 }

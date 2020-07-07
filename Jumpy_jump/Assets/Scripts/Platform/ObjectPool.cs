@@ -4,12 +4,11 @@ using UnityEditor.U2D.Path;
 using UnityEngine;
 
 public class ObjectPool :MonoBehaviour {
-
-    [SerializeField] private List<Pool> Pools; 
-
     public static ObjectPool Instans {get; private set;}
 
-    private Dictionary<string, Queue<GameObject>> PoolDictionary; 
+    [SerializeField] private List<GameObject> Pools; 
+
+    private Dictionary<PoolTag.Tag, Queue<GameObject>> PoolDictionary; 
 
     private void Awake()
     {
@@ -24,22 +23,20 @@ public class ObjectPool :MonoBehaviour {
         }
         #endregion
 
-        PoolDictionary = new Dictionary<string, Queue<GameObject>>();
+        PoolDictionary = new Dictionary<PoolTag.Tag, Queue<GameObject>>();
 
         foreach(var pool in Pools)
         {
-            Queue<GameObject> prifab = new Queue<GameObject>();
-            prifab.Enqueue(pool.prifab);
-
-            PoolDictionary.Add(pool.tag, new Queue<GameObject>());
+            PoolDictionary.Add(pool.GetComponent<ObstacleControler>().GetTag(), new Queue<GameObject>());
         }
 
     }
 
-    public GameObject GetObgectOfTag(string tag, Vector3 pos = default, Transform per = default, Quaternion rot = default)
+    public GameObject GetObgectOfTag(PoolTag.Tag tag, Vector3 pos, Transform per, Quaternion rot)
     {
         if(PoolDictionary.ContainsKey(tag) == false)
         {
+            print("Not Corect Tag");
             return null;
         }
 
@@ -48,9 +45,9 @@ public class ObjectPool :MonoBehaviour {
         {
             foreach(var pf in Pools)
             {
-                if(tag == pf.tag)
+                if(tag == pf.GetComponent<ObstacleControler>().GetTag())
                 {
-                    return Instantiate(pf.prifab, pos, rot, per);
+                    return Instantiate(pf, pos, rot, per);
                 }
             }
         }
@@ -63,26 +60,17 @@ public class ObjectPool :MonoBehaviour {
         return temp;
     }
 
-    public void ReturnToPool(string tag, GameObject obj)
+    public void ReturnToPool(GameObject obj)
     {
-
-        if(PoolDictionary.ContainsKey(tag) == false)
+        ObstacleControler temp = obj.GetComponent<ObstacleControler>();
+        if(temp == false)
         {
-            Debug.Log("Not corect tag");
+            Debug.Log("Not corect Object");
             return;
         }    
 
         obj.SetActive(false);
-        PoolDictionary[tag].Enqueue(obj);
+        PoolDictionary[temp.GetTag()].Enqueue(obj);
     }
 
-
-
-    [System.Serializable]
-    public class Pool {
-
-        public GameObject prifab;
-        public string tag;
-        public int size;
-    }
 }
